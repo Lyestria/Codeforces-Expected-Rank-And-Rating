@@ -2,8 +2,12 @@ async function getJSON(url) {
 	return (await fetch(url)).json();
 }
 
-async function getRating(user){
-	return (await getJSON(`https://codeforces.com/api/user.info?handles=${user}`)).result[0].rating;
+async function assignRatings(users){
+	for(let i=0;i<users.length;i+=10000){
+		let sec=users.slice(i,i+10000);
+		let info = await getJSON(`https://codeforces.com/api/user.info?handles=${sec.map((cont) => cont.handle).join(';')}`).result;
+		for(let j=0; j<sec.length; j++)sec[j].rating = info[j].rating;
+	}
 }
 
 function assign_ranks(contestents, s, e) {
@@ -17,7 +21,7 @@ function addElements(contestants,property,label){
 	}, {});
 	var list= $('.standings').children().eq(0).children();
 	list.eq(0).append(`<th class="top" style="width:4em;"><span>${label}</span></th>`);
-	list.splice(1).forEach( (el) =>{
+	list.slice(1).forEach( (el) =>{
 		let user=el.children().eq(1).children().eq(1).text();
 		el.append(`<td><span style="color:black;font-weight:bold;">${contestants.user.property}</span></td>`);
 	})
@@ -28,14 +32,14 @@ async function main() {
 	var code = window.location.pathname.split('/')[2];
 	console.log(code);
 	//get standings
-	var obj = getJSON(`https://codeforces.com/api/contest.standings?contestId=${code}`);
+	var obj = await getJSON(`https://codeforces.com/api/contest.standings?contestId=${code}`);
 	if(obj.status != "OK")return;
 
 	var ranking = Object.entries(obj.result.rows)
 		.filter((e) => e[1].points != 0 || e[1].problemResults.reduce((a,c) =>
 			a |= (c.rejectedAttemptCount > 0 )), false)
 		.map((e) => ({handle: e[1].party.members[0].handle, rank: e[1].rank}));
-	ranking.forEach((e) => e[1].rating = await getRating(e[0]));
+	assignRatings(ranking);
 
 	let beg=0;
 	for (let i=1; i<n; i++){
