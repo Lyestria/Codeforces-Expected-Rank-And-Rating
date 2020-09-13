@@ -8,7 +8,7 @@
 			"js": [ "jquery-3.5.1.min.js", "rating_calculator.js", "content.js" ]
 		}
 	],
-	"description": "This tool calculates the expected rank of all participants in a Codeforces contest and predicts their future rating change.",
+	"description": "This extension calculates the expected rank of all participants in a Codeforces contest and predicts their future rating change.",
 	"icons": {
 		"128": "icon128.png"
 	},
