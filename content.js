@@ -11,14 +11,30 @@ function assign_ranks(contestents, s, e) {
 	while (s< len) contestents[s++]=rk;
 }
 
+function addElements(contestants,property,label){
+	contestants=contestants.reduce((acc,cur) => {
+		acc[cur.handle]=cur;
+	}, {});
+	var list= $('.standings').children().eq(0).children();
+	list.eq(0).append(`<th class="top" style="width:4em;"><span>${label}</span></th>`);
+	list.splice(1).forEach( (el) =>{
+		let user=el.children().eq(1).children().eq(1).text();
+		el.append(`<td><span style="color:black;font-weight:bold;">${contestants.user.property}</span></td>`);
+	})
+}
+
 async function main() {
+	//get contest code
 	var code = window.location.pathname.split('/')[2];
 	console.log(code);
-
+	//get standings
 	var obj = getJSON(`https://codeforces.com/api/contest.standings?contestId=${code}`);
 	if(obj.status != "OK")return;
 
-	var ranking = Object.entries(obj.result.rows).map((e) => ({handle: e[1].party.members[0].handle, rank: e[1].rank}));
+	var ranking = Object.entries(obj.result.rows)
+		.filter((e) => e[1].points != 0 || e[1].problemResults.reduce((a,c) =>
+			a |= (c.rejectedAttemptCount > 0 )), false)
+		.map((e) => ({handle: e[1].party.members[0].handle, rank: e[1].rank}));
 	ranking.forEach((e) => e[1].rating = await getRating(e[0]));
 
 	let beg=0;
@@ -31,26 +47,11 @@ async function main() {
 	assign_ranks(ranking,beg,n);
 
 	calculateExpectedRank(ranking);
+	addElements(ranking, "expected_rank", "E(r)");
+
 	calculateDeltas(ranking);
+	addElements(ranking, "delta", "Δ");
 
-	ranking = ranking.reduce((acc,cur) => {
-		acc[cur.handle]=cur;
-	}, {})
-	/*
-	$('#users-table').children().eq(0).children().eq(0).append("<th class=\"rank\">+</th>");
-	var rows = $('#users-table').children().eq(1).children();
-	for (var i = 0; i < n; i++) {
-		var el;
-		if (deltas[i] > 0) el = "<td class=\"full-score\">+" + deltas[i] + "</td>";
-		else if (deltas[i] < 0) el = "<td class=\"failed-score\">" + deltas[i] + "</td>";
-		else el = "<td class=\"user-points\">0</td>";
-		rows.eq(i).append(el);
-	}
-
-	console.log(old_rating);
-	console.log(old_volatility);
-	console.log(times_rated);
-	console.log(deltas.reduce((a, c) => a + c));
-	*/
 }
+
 main();
