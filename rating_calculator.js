@@ -7,7 +7,7 @@ function winProb(a,b){
 //This slightly affects the rankToRating function.
 function getERank(contestants, rating){
 	return 0.5 + contestants.reduce((a,cur) =>
-		a+winProb(cur[1].rating,rating)
+		a+=winProb(cur.rating,rating)
 	);
 }
 
@@ -17,6 +17,7 @@ function calculateExpectedRank(contestants){
 	done=true;
 	contestants.forEach((cont) => cont.expected_rank=getErank(contestants, cont.rating));
 }
+
 function rankToRating(rank){
 	let l=-1000,r=5000;
 	for(let i=0;i<20;i++){
@@ -26,13 +27,14 @@ function rankToRating(rank){
 	}
 	return (l+r)*.5;
 }
+
 function calculateDeltas(contestants){
 	contestants.forEach((cont) => {
 		let R=rankToRating(Math.sqrt(cont.rank*cont.expected_rank));
 		cont.delta=(R-cont.rating)*.5;
 	})
 	let s=min(n,(int)(4*Math.sqrt(n)));
-	let inc = -contestants.reduce((a,c) => a+c.delta)/(n-1);
-	let inc2 = -contestants.slice(0,s).reduce((a,c) => a+c.delta)/s;
+	let inc = -contestants.reduce((a,c) => a+=c.delta)/(n-1);
+	let inc2 = -contestants.slice(0,s).reduce((a,c) => a+=c.delta)/s+inc;
 	contestants.forEach((cont,i) => cont.delta += inc + (i < s ? inc2 : 0));
 }
