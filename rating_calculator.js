@@ -3,38 +3,39 @@ function winProb(a,b){
 	return 1/(1+pow(10,(b-a)/400));
 }
 
-//Not exactly like the Codeforces version. That one excludes the contestant instead of using 0.5.
-//This slightly affects the rankToRating function.
-function getERank(contestants, rating){
-	return 0.5 + contestants.reduce((a,cur) =>
-		a+=winProb(cur.rating,rating)
-	);
+//Fixed
+function getERank(contestants, rating, cont){
+	return 0.5 + contestants.reduce((a,cur) => {
+		if(cur!==cont) a += winProb(cur.rating,rating);
+	});
 }
 
 var done=false;
 function calculateExpectedRank(contestants){
 	if(done)return;
 	done=true;
-	contestants.forEach((cont) => cont.expected_rank=getErank(contestants, cont.rating));
+	contestants.forEach((cont) => cont.expected_rank = getErank(contestants, cont.rating, cont));
 }
 
-function rankToRating(rank){
+function rankToRating(rank,cont){
 	let l=-1000,r=5000;
 	for(let i=0;i<20;i++){
 		let mid = (l+r)*.5;
-		if(getERank(mid)<rank)l=mid;
+		if(getERank(contestants, mid, cont)<rank)l=mid;
 		else r=mid;
 	}
 	return (l+r)*.5;
 }
 
 function calculateDeltas(contestants){
+	calculateExpectedRank(contestants);
 	contestants.forEach((cont) => {
 		let R=rankToRating(Math.sqrt(cont.rank*cont.expected_rank));
 		cont.delta=(R-cont.rating)*.5;
 	})
 	let s=min(n,(int)(4*Math.sqrt(n)));
 	let inc = -contestants.reduce((a,c) => a+=c.delta)/(n-1);
-	let inc2 = -contestants.slice(0,s).reduce((a,c) => a+=c.delta)/s+inc;
-	contestants.forEach((cont,i) => cont.delta += inc + (i < s ? inc2 : 0));
+	contestants.forEach((cont) => cont.delta += inc);
+	let inc2 = min(0, max(-10,-contestants.slice(0,s).reduce((a,c) => a+=c.delta)/s));
+	contestants.forEach((cont,i) => cont.delta += (i < s ? inc2 : 0));
 }
