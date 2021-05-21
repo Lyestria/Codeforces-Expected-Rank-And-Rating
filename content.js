@@ -27,7 +27,7 @@ let code;
 let attempt_interval = 1000; //Randomize to avoid concurrency
 let rest_time = 500;
 
-//Gets ratings of contestants in batches os the url does not exceed 5640 characters (largest safe bound, Codeforces API website is a lie.)
+//Gets ratings of contestants in batches so the url does not exceed 5640 characters (largest safe bound, Codeforces API website is a lie.)
 //For live contests
 async function get_ratings(users){
 	let section_begin = 0;
@@ -139,14 +139,14 @@ async function main() {
 
 	rows.each(function() {
 		let handle = $(this).find('a').text();
-		this.append(cell
+		$(this).append(cell
 			.replace('%1', 'black')
 			.replace('%2', ranking_dict[handle].expected_rank));
 		let delta = ranking_dict[handle].delta;
 		let color = delta > 0 ? 'green' :
 			(delta <0 ? 'red' : 'black');
 		let display = delta > 0 ? `+${delta}` : delta;
-		this.append(cell
+		$(this).append(cell
 			.replace('%1', color)
 			.replace('%2', display));
 	});
